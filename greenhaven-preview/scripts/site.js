@@ -130,7 +130,7 @@
     };
     // The cut is only made for a visitor who is browsing. The menu opens its dialogs at its own top edge, inside the
     // strip that is cut away ("enter your phone number to start your order"), so the moment it says it has opened
-    // one, or says anything this page does not know, the whole menu is given back. It stays whole for a day in this
+    // one the whole menu is given back. It stays whole for a day in this
     // browser: an order in progress is a state of the menu nobody outside the store can look at in advance.
     var WHOLE = 'gh-menu-whole', whole = false;
     try { whole = Date.now() - Number(localStorage.getItem(WHOLE) || 0) < 864e5; } catch (err) {}
@@ -160,7 +160,9 @@
       if (!f || e.source !== f.contentWindow || !e.data) return;
       var type = e.data.type;
       if (type === 'path-url-changed') listView = isList(String(e.data.pathurl || ''));
-      else if (type !== 'height-changed' && type !== 'product-changed') giveBack();   // 'modal-opened', or a message that is new
+      // 'modal-opened', or a new message of the menu's own that reads like one. Other scripts inside the menu's frame
+      // post messages of their own to this page now and then (no type, or types of theirs): those are not the menu speaking.
+      else if (typeof type === 'string' && /(^|-)(modal|dialog|popup|drawer|cart|checkout|order)(-|$)|-opened$/.test(type)) giveBack();
       live(f);
     });
   })();
