@@ -8,4 +8,4 @@ Preview builds of work in progress. These are **not** official client sites.
 
 | Preview | Link |
 |---|---|
-| Green Haven Industries (home, shop, deals, visit us) | https://nicoledreo.github.io/client-previews/greenhaven-preview/ |
+| Green Haven Industries | [Home](https://nicoledreo.github.io/client-previews/greenhaven-preview/) · [Shop (live menu)](https://nicoledreo.github.io/client-previews/greenhaven-preview/menu/) · [Deals](https://nicoledreo.github.io/client-previews/greenhaven-preview/discount-menu/) · [Visit us](https://nicoledreo.github.io/client-previews/greenhaven-preview/contact/) |

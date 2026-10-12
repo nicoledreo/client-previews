@@ -278,9 +278,9 @@ a.link-arrow::after { content: ""; position: absolute; left: 0; right: 0; top: 5
   body, body * { background: none !important; box-shadow: none !important; text-shadow: none !important; }
   body { color: #111; }
   /* "body *" does not reach pseudo-elements: the dark plates behind the hero and the page heads go too */
-  .hero::before, .hero::after, .page-head::before, .page-head::after { content: none !important; }
+  .hero::before, .hero::after, .page-head::before, .page-head::after, .savecta__panel::before { content: none !important; }
   /* text that is set in a literal light colour on screen */
-  .hero__line--2, .hero__lead, .hero li, .product-card, .product-card *, .bestsellers__name, .bestsellers__link, .bestsellers__price s, .bestsellers__price strong, .age-badge { color: #111 !important; -webkit-text-fill-color: currentColor !important; }
+  .hero__line--2, .hero__lead, .hero li, .product-card, .product-card *, .bestsellers__name, .bestsellers__link, .bestsellers__price s, .bestsellers__price strong, .age-badge, .menu-panel__all, .menu-panel__all *, .faq__pipe { color: #111 !important; -webkit-text-fill-color: currentColor !important; }
   .has-reveal [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
   .gold-text, .logo__word { -webkit-text-fill-color: currentColor !important; color: #6b5420 !important; }
   .card, .panel, li, figure, blockquote { break-inside: avoid; }

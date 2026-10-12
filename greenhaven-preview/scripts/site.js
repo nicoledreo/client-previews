@@ -120,9 +120,9 @@
     // the slider is cut out of sight (30-pages.css). Any other view (a product, the cart, a deal) is left whole.
     var replaces = !!(frame && $('.shop-offers')), listView = false;
     // A list view is /embed/<id>?... with nothing in its address but the settings below: the ones seen on views that
-    // open with the slider (home, a category, a brand, a search). A deal's page has the same path, no slider, and
+    // open with the slider (home, a category, a brand, a search, a strain type, "on sale"). A deal's page has the same path, no slider, and
     // carries discountIds...: any setting not listed here leaves the menu whole.
-    var LIST_KEYS = /^(location|pin|timestamp|gtmId|sort|page|mode|menu|category|brand|search)$/;
+    var LIST_KEYS = /^(location|pin|timestamp|gtmId|sort|page|mode|menu|category|brand|search|productType|withDiscount)$/;
     var isList = function (pathurl) {
       var m = /^\/embed\/\d+\/?(?:\?(.*))?$/.exec(pathurl);
       if (!m) return false;
@@ -130,21 +130,35 @@
     };
     // The cut is only made for a visitor who is browsing. The menu opens its dialogs at its own top edge, inside the
     // strip that is cut away ("enter your phone number to start your order"), so the moment it says it has opened
-    // one the whole menu is given back. It stays whole for a day in this
-    // browser: an order in progress is a state of the menu nobody outside the store can look at in advance.
-    var WHOLE = 'gh-menu-whole', whole = false;
+    // one the whole menu is given back. It stays whole for a day in this browser: an order in progress is a state
+    // of the menu nobody outside the store can look at in advance.
+    var WHOLE = 'gh-menu-whole', whole = false, header = $('.site-header');
     try { whole = Date.now() - Number(localStorage.getItem(WHOLE) || 0) < 864e5; } catch (err) {}
-    var giveBack = function () { whole = true; try { localStorage.setItem(WHOLE, String(Date.now())); } catch (err) {} };
+    var giveBack = function (forTheDay) { whole = true; if (forTheDay) { try { localStorage.setItem(WHOLE, String(Date.now())); } catch (err) {} } };
+    // told: the menu has said which view it is on. reported: the height of the menu's own content, as it reports it
+    // (the frame itself is padded by the menu script, by up to 570px, so its height says little while the menu loads).
+    var told = false, reported = null, cutOn = false, cutAt = 0, grownAt = 0;
+    var cutPx = function () { var w = frame.clientWidth; return w / 2 + (w >= 768 ? 53 : -11); };   // the same sum as in 30-pages.css
     // The embed inserts an empty 150px frame first and fills it seconds later (or never). The loading notice stays
-    // until the frame has actually grown. The cut waits for the same moment, and for more: the menu must already be
-    // taller than its slider. Cutting earlier would push the still-empty frame out of sight, and a browser does not
-    // draw a frame it cannot show, so the menu would never arrive.
+    // until the menu is really there.
     var live = function (f) {
       if (!frame) return;
-      var cut = replaces && listView && !whole;
-      var grown = f.offsetHeight > (cut ? frame.clientWidth / 2 + 400 : 400);
-      frame.classList.toggle('hides-banner', cut && grown);
-      if (grown) frame.classList.add('is-live');
+      var now = Date.now(), content = reported === null ? f.offsetHeight - 70 : reported, want = replaces && listView && !whole;
+      // The cut goes on once the menu's own content is clearly taller than its slider (a loading skeleton is not).
+      // It then stays on for that view, so a dip in height while the menu fills in does not make the page jump. But
+      // never when it would leave less than 200px of the frame on show: a browser does not draw a frame it cannot
+      // show, and the menu would never arrive.
+      var on = want && f.offsetHeight > cutPx() + 200 && (cutOn || content >= cutPx() + 400);
+      if (on && !cutOn) { cutAt = now; setTimeout(function () { live(f); }, 650); }
+      cutOn = on;
+      frame.classList.toggle('hides-banner', cutOn);
+      if (content > 330 && !grownAt) { grownAt = now; setTimeout(function () { live(f); }, 2600); setTimeout(function () { live(f); }, 4100); }
+      if (!grownAt || content <= 330) return;
+      // The notice goes when the menu is there and has said which view it is showing. On a view that is cut it goes
+      // 0.6s after the cut, the time the slider's own pictures usually need, so the menu is not seen jumping into
+      // place. If the menu never says which view it is on, or stays too short to cut, the notice goes anyway.
+      var waited = now - grownAt;
+      if (waited > 4000 || (!want && (told || waited > 2500)) || (cutOn && now - cutAt >= 600)) frame.classList.add('is-live');
     };
     var name = function () {
       var f = $('iframe', box); if (!f) return;
@@ -154,15 +168,27 @@
     };
     name();
     new MutationObserver(name).observe(box, { childList: true, subtree: true });
+    // The menu script answers 'modal-opened' by scrolling the page to 30px above the menu. Where the header stays on
+    // screen (phones and tablets) that leaves the top of the dialog under it. Once the menu script has scrolled, the
+    // page is moved so that the menu's top edge sits just below the header.
+    var clearOfHeader = function () {
+      setTimeout(function () {
+        if (!header || !/sticky|fixed/.test(getComputedStyle(header).position)) return;
+        var top = box.getBoundingClientRect().top, need = header.getBoundingClientRect().bottom + 8;
+        if (top < need) window.scrollBy({ top: top - need, behavior: 'instant' });
+      }, 0);
+    };
     // only messages from the menu's own frame count
     window.addEventListener('message', function (e) {
       var f = $('iframe', box);
       if (!f || e.source !== f.contentWindow || !e.data) return;
       var type = e.data.type;
-      if (type === 'path-url-changed') listView = isList(String(e.data.pathurl || ''));
-      // 'modal-opened', or a new message of the menu's own that reads like one. Other scripts inside the menu's frame
-      // post messages of their own to this page now and then (no type, or types of theirs): those are not the menu speaking.
-      else if (typeof type === 'string' && /(^|-)(modal|dialog|popup|drawer|cart|checkout|order)(-|$)|-opened$/.test(type)) giveBack();
+      if (type === 'path-url-changed') { told = true; listView = isList(String(e.data.pathurl || '')); }
+      else if (type === 'height-changed') { if (Number(e.data.height) > 0) reported = Number(e.data.height); }
+      else if (type === 'modal-opened') { giveBack(true); clearOfHeader(); }
+      // A new message of the menu's own that reads like a dialog: the menu is whole for this visit, nothing is stored.
+      // Other scripts inside the menu's frame post messages of their own now and then (no type, or types of theirs).
+      else if (typeof type === 'string' && /(^|-)(modal|dialog|popup|drawer|cart|checkout|order)(-|$)|-opened$/.test(type)) giveBack(false);
       live(f);
     });
   })();

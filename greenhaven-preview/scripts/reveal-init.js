@@ -8,7 +8,8 @@
   // Menu page: the store's menu sizes itself only while it is on screen. A reload or Back restores
   // the old scroll offset while the page is still short, the frame ends up above the viewport and
   // stays a blank 150px box. So this one page always starts at the top.
-  try { if (/^\/menu(\/|\/index\.html)?$/.test(location.pathname)) history.scrollRestoration = 'manual'; } catch (e) {}
+  // (The end of the address is tested, not the whole of it, so this also holds when the site is served from a sub-folder.)
+  try { if (/\/menu(\/|\/index\.html)?$/.test(location.pathname)) history.scrollRestoration = 'manual'; } catch (e) {}
   if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   d.classList.add('has-reveal');
   setTimeout(function () { if (!window.__ghReveal) d.classList.remove('has-reveal'); }, 3000);
