@@ -910,9 +910,8 @@ a.chip:hover { box-shadow: inset 0 0 0 1px var(--flame), 0 0 20px -4px rgba(253,
   box-shadow: inset 0 0 0 1px rgba(250, 247, 241, .18);
 }
 .nav-toggle__bars { display: grid; gap: 5px; width: 20px; }
-.nav-toggle__bars span { display: block; height: 2px; border-radius: 2px; background: var(--text-strong); }
-.nav-toggle__bars span:nth-child(2) { width: 70%; margin-left: auto; background: var(--flame); }
-.nav-toggle__bars span:nth-child(3) { width: 85%; }
+.nav-toggle__bars span { display: block; width: 100%; height: 2px; border-radius: 2px; background: var(--text-strong); }
+.nav-toggle__bars span:nth-child(2) { background: var(--flame); } /* three equal, aligned bars; the middle one keeps the flame accent */
 
 /* mega menus (glass panels) */
 .mega {
@@ -3100,10 +3099,32 @@ a.gx-lchip:hover .gx-lchip__arrow { transform: translateX(3px); }
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-padding-inline: var(--gutter);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(253, 110, 34, .5) transparent;
+  scrollbar-width: none; /* no scrollbar line: swipe / trackpad / the arrow buttons / mouse drag scroll it */
+  -ms-overflow-style: none;
   overscroll-behavior-x: contain;
 }
+.gx-rail__track::-webkit-scrollbar { display: none; }
+.gx-rail__track.is-dragging { scroll-snap-type: none; cursor: grabbing; user-select: none; }
+.gx-rail__track.is-dragging a { pointer-events: none; }
+@media (hover: hover) and (pointer: fine) { .gx-rail__track { cursor: grab; } }
+/* prev / next arrows beside "All states" (wired in pages/generic.js; hidden without JS or when nothing scrolls) */
+.gx-rail__cta { display: flex; align-items: center; gap: 10px; }
+.gx-rail__nav { display: flex; gap: 8px; }
+.gx-rail__nav[hidden] { display: none; }
+.gx-rail__btn {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--text-strong);
+  background: rgba(250, 247, 241, .05);
+  box-shadow: inset 0 0 0 1px rgba(250, 247, 241, .18);
+  cursor: pointer;
+  transition: box-shadow .3s, color .3s, opacity .3s, transform .3s var(--ease-out);
+}
+.gx-rail__btn .i { width: 18px; height: 18px; }
+.gx-rail__btn:hover:not(:disabled), .gx-rail__btn:focus-visible { color: var(--flame); box-shadow: inset 0 0 0 1px rgba(253, 110, 34, .7), 0 0 22px -6px rgba(253, 110, 34, .6); transform: translateY(-2px); }
+.gx-rail__btn:disabled { opacity: .3; cursor: default; }
+.gx-rail__btn--prev .i { transform: scaleX(-1); }
 .gx-rail__item { scroll-snap-align: start; display: flex; }
 .gx-rail__card { position: relative; display: flex; flex-direction: column; gap: 12px; width: 100%; min-height: 190px; padding: 22px 22px 20px; border-radius: var(--r-lg); transition: transform .6s var(--ease-out), box-shadow .5s; }
 .gx-rail__card:hover { transform: translateY(-6px); box-shadow: var(--glass-inset), var(--shadow-xl), 0 0 0 1px rgba(253, 110, 34, .45); }
@@ -3229,19 +3250,24 @@ a.gx-lchip:hover .gx-lchip__arrow { transform: translateX(3px); }
   text-transform: uppercase;
   color: var(--text-strong);
 }
-/* flame-lit words: <em> inside the display headings (the [data-split] hook keeps them as glow words) */
-.home-hero__title em, .home-hero__title em *,
-.tpl-home .home-h2 em, .tpl-home .home-h2 em *,
-.home-cta__title em, .home-cta__title em * {
+/* flame-lit words: <em> inside the display headings (the [data-split] hook keeps them as glow words).
+   Exactly ONE element paints the gradient: the <em> itself, or, once zz-signature.js has split it, each
+   word's .sw__t (zz-signature.css). A descendant selector (em *) used to make the word wrappers paint it as
+   well, and Safari then drew a second, offset copy of the letters while the words rose. The glow sits on the
+   moving wrapper (.sw__i), never on the element that clips the gradient to the text. */
+.home-hero__title em, .tpl-home .home-h2 em, .home-cta__title em {
   font-style: normal;
   background: var(--grad-flame-text);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+  padding-inline-end: .03em;
+  text-shadow: none;
 }
-.home-hero__title em, .tpl-home .home-h2 em, .home-cta__title em { filter: drop-shadow(0 0 26px rgba(253, 110, 34, .38)); padding-inline-end: .03em; }
-.home-hero__title em, .home-hero__title em *, .home-cta__title em, .home-cta__title em * { text-shadow: none; }
+.home-hero__title em { white-space: nowrap; } /* "#1 Global" stays on one line in every engine (Firefox's balance split it) */
+:is(.home-hero__title, .tpl-home .home-h2, .home-cta__title) em:not(.sw-clip) { filter: drop-shadow(0 0 26px rgba(253, 110, 34, .38)); }
+:is(.home-hero__title, .tpl-home .home-h2, .home-cta__title) .sw--lit .sw__i { filter: drop-shadow(0 0 26px rgba(253, 110, 34, .38)); }
 
 @keyframes home-float { from { translate: 0 -10px; } to { translate: 0 12px; } }
 @keyframes home-spin { to { rotate: 360deg; } }
@@ -3261,6 +3287,41 @@ a.gx-lchip:hover .gx-lchip__arrow { transform: translateX(3px); }
   overflow: visible;
 }
 .home-hero .hero__img { object-position: var(--hero-pos); filter: saturate(1.06) contrast(1.08) brightness(.96); }
+/* the still under the video (picture: phones get the portrait crop) — the video covers it once frames arrive */
+.home-hero__poster { position: absolute; inset: 0; display: block; }
+/* iOS draws a big play glyph over an inline video it refuses to autoplay (Low Power Mode): hide it — the
+   still underneath and the pause/play button below stand in for it */
+.home-hero__video::-webkit-media-controls-start-playback-button { display: none !important; -webkit-appearance: none; }
+.home-hero__video::-webkit-media-controls { display: none !important; }
+
+/* pause / play for the background video */
+.home-hero__vtoggle {
+  position: absolute;
+  z-index: 6;
+  right: var(--gutter);
+  /* below the whole fixed header: the utility strip (--topbar-h) plus the nav bar (--header-h) */
+  top: calc(var(--topbar-h, 40px) + var(--header-h, 76px) + clamp(14px, 2.4vh, 26px));
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  color: var(--text-strong);
+  background: rgba(2, 0, 24, .38);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: inset 0 0 0 1px rgba(250, 247, 241, .2), 0 10px 30px -12px rgba(0, 0, 0, .7);
+  cursor: pointer;
+  opacity: .82;
+  transition: opacity .3s, box-shadow .3s, transform .3s var(--ease-out);
+}
+.home-hero__vtoggle[hidden] { display: none; }
+.home-hero__vtoggle:hover, .home-hero__vtoggle:focus-visible { opacity: 1; transform: scale(1.06); box-shadow: inset 0 0 0 1px rgba(253, 110, 34, .7), 0 0 24px -4px rgba(253, 110, 34, .55); }
+/* pause = two bars, play = triangle (pure CSS, no icon font) */
+.home-hero__vicon { position: relative; width: 12px; height: 14px; }
+.home-hero__vicon::before, .home-hero__vicon::after { content: ""; position: absolute; top: 0; width: 4px; height: 14px; border-radius: 1px; background: currentColor; }
+.home-hero__vicon::before { left: 0; }
+.home-hero__vicon::after { right: 0; }
+.home-hero__vtoggle.is-paused .home-hero__vicon::before { left: 2px; width: 0; height: 0; border-radius: 0; background: none; border-style: solid; border-width: 7px 0 7px 12px; border-color: transparent transparent transparent currentColor; }
+.home-hero__vtoggle.is-paused .home-hero__vicon::after { display: none; }
 .home-hero .home-hero__shade {
   background:
     linear-gradient(90deg, rgba(2, 0, 24, .95) 0%, rgba(2, 0, 24, .82) 26%, rgba(2, 0, 24, .4) 50%, rgba(2, 0, 24, 0) 68%),
@@ -3409,6 +3470,11 @@ a.gx-lchip:hover .gx-lchip__arrow { transform: translateX(3px); }
   .home-hero__base-inner { justify-content: flex-start; }
   .home-hero__stat { width: auto; max-width: 420px; }
   .home-hero__cut { right: -24px; bottom: -110px; width: clamp(120px, 30vw, 190px); }
+}
+@media (max-width: 767px) {
+  /* phones play the portrait crop (hero-loop-mobile.mp4 / hero-poster-mobile.webp): the candle drifts across
+     the middle of that frame, so centre it instead of the desktop file's right-hand framing */
+  .home-hero { --hero-pos: 50% 50%; }
 }
 @media (max-width: 520px) {
   .home-hero .home-hero__pillars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -4397,10 +4463,13 @@ html.ignite:not(.ignite-go) .beam::before { animation-play-state: paused !import
   user-select: none;
 }
 .sw, .sw__i { display: inline-block; }
-/* a lit host that painted its gradient with background-clip:text hands the gradient to each word
-   (Chrome drops transformed children from a parent's text clip) */
+/* a lit host that painted its gradient with background-clip:text hands the gradient to each word's text
+   span (.sw__t). That span is never transformed, filtered or clipped itself (the rise lives on .sw__i, the
+   mask on .sw): Chrome drops transformed children from a parent's text clip, and Safari paints a second,
+   offset copy of the letters when the element that clips the gradient is the one that moves. */
 .sw-clip { background: none !important; }
-.sw-clip .sw__i {
+.sw__t { display: inline-block; }
+.sw-clip .sw__t {
   background-image: var(--sw-bg);
   -webkit-background-clip: text;
   background-clip: text;

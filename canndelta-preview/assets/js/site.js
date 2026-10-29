@@ -556,15 +556,37 @@ function initVideos() {
     });
     v.addEventListener('seeked', function () { if (v.currentTime < 1) set(false); });
   });
-  if (!('IntersectionObserver' in window)) return;
+  // Autoplay can be refused (iPhone Low Power Mode, some data-saver modes): the browser rejects play().
+  // A play() made inside a tap / click / key handler is allowed, so retry once on the visitor's first gesture.
+  var refused = [], armed = false;
+  var tryPlay = function (v) {
+    if (v.dataset.userPaused) return; // the visitor paused it (home hero toggle): never resume on our own
+    v.muted = true;
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {
+      if (refused.indexOf(v) < 0) refused.push(v);
+      if (armed) return;
+      armed = true;
+      var evs = ['touchend', 'pointerup', 'click', 'keydown'];
+      var go = function () {
+        evs.forEach(function (n) { document.removeEventListener(n, go, true); });
+        armed = false;
+        var list = refused; refused = [];
+        list.forEach(function (x) { if (x.__inView !== false) tryPlay(x); });
+      };
+      evs.forEach(function (n) { document.addEventListener(n, go, { capture: true, passive: true }); });
+    });
+  };
+  if (!('IntersectionObserver' in window)) { vids.forEach(tryPlay); return; }
   var io = new IntersectionObserver(function (es) {
     es.forEach(function (e) {
       var v = e.target;
-      if (e.isIntersecting) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+      v.__inView = e.isIntersecting;
+      if (e.isIntersecting) tryPlay(v);
       else v.pause();
     });
   }, { threshold: 0.05 });
-  vids.forEach(function (v) { v.muted = true; io.observe(v); });
+  vids.forEach(function (v) { v.muted = true; v.playsInline = true; io.observe(v); });
 }
 
 /* ------------------------------------------------------------------ inert preview forms + toast */
@@ -1017,6 +1039,53 @@ if (gxDoc) {
   });
 }
 
+/* Related-states rail ("Keep exploring"): no visible scrollbar line, so mouse users get prev / next buttons
+   and drag-to-scroll; touch screens and trackpads keep native swiping. */
+Array.prototype.slice.call(document.querySelectorAll('[data-rail]')).forEach(function (rail) {
+  var track = rail.querySelector('.gx-rail__track');
+  if (!track) return;
+  var band = rail.closest('section') || rail.parentNode;
+  var nav = band && band.querySelector('[data-rail-nav]');
+  var prev = nav && nav.querySelector('[data-rail-prev]');
+  var next = nav && nav.querySelector('[data-rail-next]');
+  var update = function () {
+    var max = track.scrollWidth - track.clientWidth - 2;
+    if (nav) nav.hidden = max <= 0;
+    if (prev) prev.disabled = track.scrollLeft <= 2;
+    if (next) next.disabled = track.scrollLeft >= max;
+  };
+  var by = function (dir) { track.scrollBy({ left: dir * Math.max(240, track.clientWidth * 0.8), behavior: 'smooth' }); };
+  if (prev) prev.addEventListener('click', function () { by(-1); });
+  if (next) next.addEventListener('click', function () { by(1); });
+  track.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+  // mouse drag only (pointerType "mouse"); pen and touch keep the browser's own scrolling
+  var down = false, moved = false, sx = 0, sl = 0;
+  track.addEventListener('pointerdown', function (e) {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    down = true; moved = false; sx = e.clientX; sl = track.scrollLeft;
+  });
+  window.addEventListener('pointermove', function (e) {
+    if (!down) return;
+    var dx = e.clientX - sx;
+    if (!moved && Math.abs(dx) > 6) { moved = true; track.classList.add('is-dragging'); }
+    if (moved) { track.scrollLeft = sl - dx; e.preventDefault(); }
+  });
+  var end = function () {
+    if (!down) return;
+    down = false;
+    if (!moved) return;
+    track.classList.remove('is-dragging');
+    // the click that ends a drag must not open the card under the cursor
+    var swallow = function (ev) { ev.preventDefault(); ev.stopPropagation(); track.removeEventListener('click', swallow, true); };
+    track.addEventListener('click', swallow, true);
+    setTimeout(function () { track.removeEventListener('click', swallow, true); }, 80);
+  };
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+});
+
 })();
 
 /* ==== src/scripts/pages/home.js ==== */
@@ -1133,9 +1202,41 @@ function initLazyVideo() {
   vids.forEach(function (v) { io.observe(v); });
 }
 
+/* ------------------------------------------------------------------ 3 · hero video pause / play
+   WCAG 2.2.2: moving content that starts on its own needs a way to stop it. The same button starts the video
+   where autoplay is refused: with a reduced-motion preference site.js leaves it paused, and iPhone Low Power
+   Mode blocks autoplay until a tap. A video the visitor paused is never resumed by the scroll observer. */
+function initHeroToggle() {
+  var v = document.querySelector('video.home-hero__video');
+  var btn = document.querySelector('[data-hero-vtoggle]');
+  if (!v || !btn) return;
+  btn.hidden = false;
+  var sync = function () {
+    var playing = !v.paused && !v.ended;
+    btn.classList.toggle('is-paused', !playing);
+    btn.setAttribute('aria-pressed', playing ? 'false' : 'true');
+    btn.setAttribute('aria-label', playing ? 'Pause background video' : 'Play background video');
+  };
+  ['play', 'playing', 'pause', 'ended'].forEach(function (n) { v.addEventListener(n, sync); });
+  btn.addEventListener('click', function () {
+    if (v.paused) {
+      delete v.dataset.userPaused;
+      v.muted = true;
+      if (!v.loop) v.loop = true;
+      var p = v.play();
+      if (p && p.catch) p.catch(function () { sync(); });
+    } else {
+      v.dataset.userPaused = '1';
+      v.pause();
+    }
+  });
+  sync();
+}
+
 function guard(name, fn) { try { fn(); } catch (err) { if (window.console) console.error('[home.js] ' + name + ' failed', err); } }
 guard('rail', initRail);
 guard('video', initLazyVideo);
+guard('hero-toggle', initHeroToggle);
 
 })();
 
@@ -1257,7 +1358,13 @@ if (hxGrid) {
         var inner = document.createElement('span');
         inner.className = 'sw__i';
         inner.style.setProperty('--wi', String(n.i++));
-        inner.textContent = w;
+        if (lit) {
+          // lit words: the gradient is clipped by a still child, so the moving .sw__i never owns the text clip
+          var tx = document.createElement('span');
+          tx.className = 'sw__t';
+          tx.textContent = w;
+          inner.appendChild(tx);
+        } else inner.textContent = w;
         outer.appendChild(inner);
         frag.appendChild(outer);
       }
