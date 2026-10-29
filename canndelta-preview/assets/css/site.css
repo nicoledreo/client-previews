@@ -1619,9 +1619,11 @@ html.is-locked, html.is-locked body { overflow: hidden; }
 .icon-list .i { width: 22px; height: 22px; margin-top: 1px; color: var(--flame); flex: none; }
 .icon-list a { transition: color .3s; }
 .icon-list a:hover { color: var(--flame-200); }
-.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 18px; }
-.gallery__item:nth-child(3n + 1) .media__inner { aspect-ratio: 4 / 5; }
+/* every gallery tile is the same box (4:3), whatever the source image's shape; screenshots crop from the top */
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: clamp(14px, 1.6vw, 22px); }
+.gallery__item { margin: 0; }
 .gallery__item .media__inner { aspect-ratio: 4 / 3; }
+.gallery__item .media__inner img { object-position: center top; }
 
 /* ---------------------------------------------------------------- accordion */
 .accordion { display: grid; gap: 12px; }
@@ -3007,6 +3009,23 @@ a.gx-lchip:hover .gx-lchip__arrow { transform: translateX(3px); }
 /* ---------------------------------------------------------------- cards, stats, statements */
 .gx-cards > * + * { margin-top: 1.6rem; }
 .gx-cards .grid { gap: clamp(16px, 1.8vw, 26px); }
+/* card grids follow the width they actually get (a band, a split column), not the viewport: never under
+   ~230 px a card, never more than 3 (or 4) a row */
+.gx-band .grid--3 { grid-template-columns: repeat(auto-fit, minmax(max(min(230px, 100%), calc((100% - 52px) / 3)), 1fr)); }
+.gx-band .grid--4 { grid-template-columns: repeat(auto-fit, minmax(max(min(210px, 100%), calc((100% - 78px) / 4)), 1fr)); }
+/* cards that follow an image + copy split run as their own full-width row */
+.gx-cards--after { margin-top: clamp(2rem, 1.2rem + 2.4vw, 3.4rem); }
+/* heading + image + cards: the image as a banner between the title and the cards */
+.gx-wide--banner .media__inner { aspect-ratio: 16 / 7 !important; max-height: 460px; }
+.gx-wide--banner .media__inner img { height: 100% !important; object-fit: cover; }
+.gx-wide--banner + .gx-cards--after { margin-top: clamp(1.6rem, 1rem + 2vw, 2.8rem); }
+/* showcase galleries: one even grid across the band (2 or 3 a row), same tile size for every image */
+.gx-gallery .gallery { grid-template-columns: repeat(var(--gcols, 3), minmax(0, 1fr)); }
+.gx-head + .gx-gallery, .gx-ed + .gx-gallery { margin-top: clamp(1.6rem, 1rem + 2vw, 2.8rem); }
+.gx-gallery__cta { margin-top: 1.6rem; display: flex; justify-content: center; }
+@media (max-width: 900px) { .gx-gallery .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .gx-gallery .gallery { grid-template-columns: 1fr; } }
+.gx-gallery[style*="--gcols:1"] .gallery { grid-template-columns: minmax(0, 720px); justify-content: center; }
 .gx-defs .card__title { font-size: clamp(1.05rem, 1rem + .3vw, 1.25rem); }
 .gx-defs .card__text p { font-size: var(--fs-sm); }
 .gx-band--stats .stats, .gx-stats { gap: clamp(1.5rem, 3vw, 3rem); }
