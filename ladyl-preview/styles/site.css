@@ -2886,3 +2886,84 @@ html.js .page-shop .shero__in { opacity: 0; animation: rise-in .95s var(--ease-o
 }
 @keyframes shop-glow { 50% { transform: scale(1.06); opacity: .82; } }
 @media (prefers-reduced-motion: reduce) { html.js .page-shop .shero__in { opacity: 1; animation: none; } }
+
+/* ---- pages/zz-fixes.css ---- */
+
+
+.page-420 .pg-ptix__no,
+.postcard__no,
+.page-about .pg-value__no,
+.page-editorial .ed-dish__no,
+.page-pages .on-light .pg-lcard__no,
+.page-shop .on-light .tip__no,
+.page-guide .pg-chapter__no {
+  
+  --ol: var(--violet);
+  color: var(--ol);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  filter: none;
+  letter-spacing: .02em;
+}
+.page-420 .pg-ptix__no { --ol: var(--indigo); }
+.page-guide .pg-chapter__no { --ol: var(--violet-2); }
+
+
+.page-pages .pg-lcard__no,
+.page-shop .tip__no {
+  color: var(--sun);
+  -webkit-text-stroke: 0;
+  text-shadow: .06em .06em 0 var(--indigo);
+}
+.page-pages .on-light .pg-lcard__no, .page-shop .on-light .tip__no { text-shadow: none; }
+
+
+.page-420 .pg-cal__day {
+  -webkit-text-stroke: 0;
+  filter: drop-shadow(.03em .04em 0 var(--indigo)) drop-shadow(.045em .05em 0 var(--sun));
+}
+
+
+*, *::before, *::after { -webkit-text-stroke: 0 !important; }
+
+
+
+.page-event .evp-poster__m, .page-event .evp-poster__d,
+.page-events .evx-mini__m, .page-events .evx-mini__d { color: #fff; text-shadow: .045em .055em 0 var(--indigo), .085em .1em 0 var(--sun); }
+
+
+.page-refer .pg-ticket__code { color: var(--violet); text-shadow: .05em .06em 0 var(--indigo); }
+
+
+@media (min-width: 1000px) {
+  .page-local .lc-hero--store .lc-hero__grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .page-local .lc-hero--store .lc-hero__side { width: min(100%, 640px); }
+}
+.page-local .lc-hero--store .lc-hero__side { width: min(100%, 600px); }
+.page-local .lc-hero--store .lc-store__main { width: 82%; }
+.page-local .lc-hero--store .lc-store__polaroid { width: 43%; top: 32%; }
+
+@media (max-width: 760px) {
+  .page-local .lc-hero--store .lc-store__polaroid { width: 42%; top: 70px; }
+  .page-local .lc-hero--store .lc-storecard { margin-top: 18px; }
+}
+
+
+.page-post .ed-lede::first-letter { -webkit-text-stroke: 0; text-shadow: .045em .05em 0 var(--indigo); }
+
+
+.page-local .lc-pass--mini { width: min(60%, 262px); bottom: -9%; }
+.page-local .lc-pass--mini .lc-pass__stub, .page-local .lc-pass--mini .lc-pass__main { padding: 13px 15px; }
+.page-local .lc-pass--mini .lc-pass__main { padding-top: 12px; }
+.page-local .lc-pass--mini .lc-pass__foot { margin-top: 8px; }
+.page-local .lc-pass--mini .lc-pass__pt strong { font-size: clamp(.86rem, 1vw, .96rem); }
+.page-local .lc-pass--mini .lc-pass__pt span:not(.lc-pass__lbl) { font-size: .7rem; }
+.page-local .lc-pass--mini .lc-pass__kicker, .page-local .lc-pass--mini .lc-pass__lbl { font-size: .6rem; }
+.page-local .lc-pass--mini .btn { font-size: .62rem; min-height: 36px; padding: .7em 1.05em; }
+.page-local .lc-pass--mini .status-pill { font-size: .6rem; padding: 5px 10px; }
+@media (min-width: 1000px) { .page-local .lc-pass--mini { left: -16%; bottom: -12%; } }
+@media (max-width: 999px) {
+  .page-local .lc-pass--mini { position: relative; left: auto; bottom: auto; width: min(94%, 360px); margin: -46px auto 0; }
+  .page-local .lc-pass--mini .lc-pass__pt strong { font-size: 1rem; }
+  .page-local .lc-pass--mini .lc-pass__pt span:not(.lc-pass__lbl) { font-size: .76rem; }
+}
