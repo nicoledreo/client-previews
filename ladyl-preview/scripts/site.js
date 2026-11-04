@@ -26,7 +26,9 @@
     });
   }
 
-  /* ---------- header: glass on scroll, hide on scroll down ---------- */
+  var pickupSync = null; // set by the pickup bar below
+  /* ---------- header: pinned (position:sticky) + glass once scrolled. NOT direction-aware: it used to hide on scroll
+     down and reappear on scroll up, which read as lag / flicker (owner 2026-11-04; design system V4 08 sticky header) */
   var header = $('[data-header]');
   var meter = $('.scroll-meter');
   var lastY = window.scrollY, ticking = false;
@@ -34,13 +36,10 @@
     var y = window.scrollY;
     if (header) {
       header.classList.toggle('is-scrolled', y > 24);
-      var drawerOpen = body.classList.contains('drawer-open');
-      var megaOpen = !!$('.nav__item.is-open');
-      if (!drawerOpen && !megaOpen) header.classList.toggle('is-hidden', y > 420 && y > lastY + 4);
-      if (y < lastY - 4) header.classList.remove('is-hidden');
     }
     if (meter) { var h = doc.documentElement.scrollHeight - window.innerHeight; meter.style.setProperty('--progress', h > 0 ? Math.min(1, y / h).toFixed(4) : 0); }
     lastY = y;
+    if (pickupSync) pickupSync();
     parallax();
     ticking = false;
   }
@@ -255,6 +254,54 @@
     if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }, { threshold: 0.1 }).observe(rail);
     raf = requestAnimationFrame(tick);
   });
+
+  /* ---------- sticky "Pick up in Store" bar (design system V4 - 08 Scroll & Sticky, "Sticky CTA", F2 element-in-view) ----------
+     Visible once the hero has scrolled away; hidden again over the hero, while the footer is in view, while the mobile
+     drawer is open and while a text field has focus (on-screen keyboard). The x hides it for the session. Focus is never
+     moved into it; CSS keeps it visibility:hidden while hidden so it can't be tabbed into. --bottom-stack lifts the toast. */
+  (function () {
+    var bar = $('[data-pickup-bar]'); if (!bar) return;
+    var main = $('main'); var hero = main && main.firstElementChild; var foot = $('.site-footer');
+    var dismissed = false; try { dismissed = sessionStorage.getItem('ladyl-pickup-x') === '1'; } catch (e) {}
+    var footIn = false, typing = false;
+    pickupSync = function () {
+      var pastHero = hero ? hero.getBoundingClientRect().bottom < window.innerHeight * 0.3 : window.scrollY > window.innerHeight;
+      var on = !dismissed && pastHero && !footIn && !typing && !body.classList.contains('drawer-open');
+      if (on !== bar.classList.contains('is-visible')) bar.classList.toggle('is-visible', on);
+      root.style.setProperty('--bottom-stack', on ? bar.offsetHeight + 'px' : '0px');
+    };
+    if (foot && 'IntersectionObserver' in window) new IntersectionObserver(function (es) { footIn = es[0].isIntersecting; pickupSync(); }, { rootMargin: '0px 0px 40px 0px' }).observe(foot);
+    doc.addEventListener('focusin', function (e) { var t = e.target; if (t && t.matches && t.matches('input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]), textarea, select')) { typing = true; pickupSync(); } });
+    doc.addEventListener('focusout', function () { typing = false; setTimeout(pickupSync, 60); });
+    var x = $('[data-pickup-close]', bar);
+    if (x) x.addEventListener('click', function () { dismissed = true; try { sessionStorage.setItem('ladyl-pickup-x', '1'); } catch (e) {} pickupSync(); });
+    if ('MutationObserver' in window) new MutationObserver(function () { pickupSync(); }).observe(body, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', pickupSync);
+    pickupSync();
+  })();
+
+  /* ---------- map beside boxes: the map spans exactly the boxed part of the other column (owner: "the map neatly
+     aligns with the boxes on the left"). Offsets (not getBoundingClientRect) so reveal transforms don't skew it; only
+     when the two columns sit side by side; recomputed on resize + after fonts load. Floating objects ride the map box. */
+  function topIn(el, anc) { var t = 0; while (el && el !== anc) { t += el.offsetTop; el = el.offsetParent; } return el === anc ? t : null; }
+  function alignMaps() {
+    $$('.split').forEach(function (sp) {
+      var media = $('.split__media', sp); var map = media && $('.map-frame', media); if (!map) return;
+      var col = [].filter.call(sp.children, function (c) { return c !== media; })[0]; if (!col) return;
+      map.classList.remove('is-aligned'); map.style.removeProperty('--map-h'); media.style.removeProperty('--map-top');
+      var boxes = [].filter.call(col.querySelectorAll('.glass'), function (b) { return b.offsetHeight > 30 && !b.closest('.split__media'); });
+      var sideBySide = media.offsetLeft > col.offsetLeft + col.offsetWidth - 20 || col.offsetLeft > media.offsetLeft + media.offsetWidth - 20;
+      if (!boxes.length || !sideBySide) return;
+      var top = topIn(boxes[0], sp), last = boxes[boxes.length - 1], bottom = topIn(last, sp);
+      if (top == null || bottom == null) return;
+      bottom += last.offsetHeight;
+      media.style.setProperty('--map-top', top + 'px'); map.style.setProperty('--map-h', (bottom - top) + 'px'); map.classList.add('is-aligned');
+    });
+  }
+  alignMaps();
+  window.addEventListener('load', alignMaps);
+  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(alignMaps);
+  var amT = 0; window.addEventListener('resize', function () { clearTimeout(amT); amT = setTimeout(alignMaps, 120); });
 
   /* ---------- preview forms (not connected) ---------- */
   var toast = $('[data-toast]'); var tt;
