@@ -37,7 +37,6 @@
     var y = window.scrollY;
     if (header) header.classList.toggle('is-scrolled', y > 30);
     setUtilH();
-    parallax();
     if (pickupSync) pickupSync();
     ticking = false;
   }
@@ -69,75 +68,6 @@
   if (burger) burger.addEventListener('click', function () { toggleDrawer(); });
   if (drawer) drawer.addEventListener('click', function (e) { if (e.target.closest('a')) toggleDrawer(false); });
   window.addEventListener('resize', function () { if (window.innerWidth > 1180) toggleDrawer(false); });
-
-  /* ---------- word-by-word headline reveal ---------- */
-  $$('[data-words]').forEach(function (el) {
-    if (reduce) return;
-    var i = 0;
-    (function split(node) {
-      Array.prototype.slice.call(node.childNodes).forEach(function (n) {
-        if (n.nodeType === 3) {
-          var parts = n.nodeValue.split(/(\s+)/); var frag = doc.createDocumentFragment();
-          parts.forEach(function (p) { if (!p) return; if (/^\s+$/.test(p)) { frag.appendChild(doc.createTextNode(p)); return; } var s = doc.createElement('span'); s.className = 'w'; s.style.setProperty('--w', i++); s.textContent = p; frag.appendChild(s); });
-          node.replaceChild(frag, n);
-        } else if (n.nodeType === 1 && !/^(svg|img|br)$/i.test(n.tagName)) split(n);
-      });
-    })(el);
-  });
-
-  /* ---------- reveal on scroll ---------- */
-  var revealEls = $$('[data-reveal], [data-words]');
-  if ('IntersectionObserver' in window && !reduce) {
-    var io = new IntersectionObserver(function (entries) { entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } }); }, { rootMargin: '0px 0px -7% 0px', threshold: 0.05 });
-    revealEls.forEach(function (el) { io.observe(el); });
-    // a fast fling can carry an element through the viewport between two frames, so the observer never fires:
-    // when scrolling settles, everything above the viewport's bottom edge is revealed
-    var sweep = function () { for (var i = 0; i < revealEls.length; i++) { var el = revealEls[i]; if (el.classList.contains('is-in')) continue; if (el.getBoundingClientRect().top < window.innerHeight * 1.05) { el.classList.add('is-in'); io.unobserve(el); } } };
-    var settle = 0; window.addEventListener('scroll', function () { clearTimeout(settle); settle = setTimeout(sweep, 140); }, { passive: true });
-    window.addEventListener('load', function () { setTimeout(sweep, 3500); });
-    window.addEventListener('hashchange', function () { setTimeout(sweep, 60); });
-  } else revealEls.forEach(function (el) { el.classList.add('is-in'); });
-
-  /* ---------- scroll parallax ---------- */
-  var layers = $$('[data-depth]');
-  function parallax() {
-    if (reduce || !layers.length) return;
-    var vh = window.innerHeight;
-    for (var i = 0; i < layers.length; i++) {
-      var el = layers[i], r = el.getBoundingClientRect();
-      if (r.bottom < -300 || r.top > vh + 300) continue;
-      var d = parseFloat(el.getAttribute('data-depth')) || 0;
-      var c = r.top + r.height / 2 - vh / 2;
-      el.style.setProperty('--py', (-c * d).toFixed(1) + 'px');
-    }
-  }
-
-  /* ---------- hero: pointer spotlight + pointer parallax ---------- */
-  var stage = $('[data-stage]');
-  if (stage && finePointer && !reduce) {
-    var tx = 0.5, ty = 0.4, cx = 0.5, cy = 0.4, raf = 0;
-    var movers = $$('.float', stage);
-    stage.addEventListener('pointermove', function (e) { var r = stage.getBoundingClientRect(); tx = (e.clientX - r.left) / r.width; ty = (e.clientY - r.top) / r.height; if (!raf) raf = requestAnimationFrame(step); });
-    stage.addEventListener('pointerleave', function () { tx = 0.7; ty = 0.35; if (!raf) raf = requestAnimationFrame(step); });
-    function step() {
-      cx += (tx - cx) * 0.09; cy += (ty - cy) * 0.09;
-      stage.style.setProperty('--mx', (cx * 100).toFixed(2) + '%'); stage.style.setProperty('--my', (cy * 100).toFixed(2) + '%');
-      movers.forEach(function (m, i) { var k = [26, 40, 18, 32][i % 4]; m.style.setProperty('--px', ((cx - 0.5) * k).toFixed(1) + 'px'); });
-      if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) raf = requestAnimationFrame(step); else raf = 0;
-    }
-  }
-
-  /* ---------- 3D tilt + glare ---------- */
-  if (finePointer && !reduce) {
-    $$('[data-tilt]').forEach(function (card) {
-      card.addEventListener('pointermove', function (e) {
-        var r = card.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-        card.style.transform = 'perspective(900px) rotateX(' + ((0.5 - y) * 7).toFixed(2) + 'deg) rotateY(' + ((x - 0.5) * 9).toFixed(2) + 'deg) translateY(-6px)';
-        card.style.setProperty('--gx', (x * 100).toFixed(1) + '%'); card.style.setProperty('--gy', (y * 100).toFixed(1) + '%');
-      });
-      card.addEventListener('pointerleave', function () { card.style.transform = ''; });
-    });
-  }
 
   /* ---------- open / closed (Minnesota time, noon to 8 every day) ---------- */
   function mnNow() {
