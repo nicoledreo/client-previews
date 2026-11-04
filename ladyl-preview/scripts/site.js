@@ -217,6 +217,45 @@
     rail.addEventListener('click', function (e) { if (moved) { e.preventDefault(); e.stopPropagation(); } }, true);
   });
 
+  /* ---------- review rails: slow continuous auto-scroll (owner: "not too fast, just enough to be easily read") ----------
+     ~28px/s on desktop, ~16px/s on phones (about one card every 14-20s). Seamless loop through a cloned set
+     (aria-hidden + inert, so it is never read twice or focused). Pauses on hover, focus, touch/drag, wheel/swipe and
+     the arrows (resumes a few seconds later), when off-screen or the tab is hidden; off for reduced motion. */
+  $$('[data-rail-auto]').forEach(function (rail) {
+    if (reduce) return;
+    var kids = Array.prototype.slice.call(rail.children);
+    if (kids.length < 2) return;
+    kids.forEach(function (k) { var c = k.cloneNode(true); c.removeAttribute('data-reveal'); c.classList.add('is-in', 'is-clone'); c.setAttribute('aria-hidden', 'true'); c.setAttribute('inert', ''); rail.appendChild(c); });
+    var wrap = rail.parentElement || rail;
+    var setW = function () { return kids[kids.length - 1].nextElementSibling.offsetLeft - kids[0].offsetLeft; };
+    var speed = function () { return Math.max(16, Math.min(28, rail.clientWidth / 40)); };
+    var pos = rail.scrollLeft, last = 0, hold = 0, hover = false, focus = false, visible = true, raf = 0, setByUs = -1;
+    var pauseFor = function (ms) { hold = Math.max(hold, performance.now() + ms); };
+    var tick = function (t) {
+      raf = requestAnimationFrame(tick);
+      var dt = last ? Math.min(0.1, (t - last) / 1000) : 0; last = t;
+      if (hover || focus || !visible || doc.hidden || t < hold) { pos = rail.scrollLeft; return; } // paused: leave the position alone (no snap jump under the cursor)
+      rail.style.scrollSnapType = 'none';
+      var w = setW();
+      pos += speed() * dt;
+      if (w > 0 && pos >= w) pos -= w;
+      setByUs = Math.round(pos); rail.scrollLeft = pos;
+    };
+    rail.addEventListener('scroll', function () { if (setByUs >= 0 && Math.abs(rail.scrollLeft - setByUs) > 3) { pauseFor(5000); setByUs = -1; } }, { passive: true });
+    wrap.addEventListener('mouseenter', function () { hover = true; });
+    wrap.addEventListener('mouseleave', function () { hover = false; pauseFor(800); });
+    // pause for KEYBOARD focus only: a mouse click leaves focus on the arrow button and must not stop the rail for good
+    wrap.addEventListener('focusin', function (e) { var t = e.target; try { focus = !!(t && t.matches && t.matches(':focus-visible')); } catch (x) { focus = false; } });
+    wrap.addEventListener('focusout', function () { focus = false; pauseFor(1500); });
+    rail.addEventListener('pointerdown', function () { pauseFor(6000); }, { passive: true });
+    rail.addEventListener('touchstart', function () { rail.style.scrollSnapType = ''; pauseFor(6000); }, { passive: true }); // swipe lands on a card
+    rail.addEventListener('wheel', function () { pauseFor(5000); }, { passive: true });
+    // arrows: re-enable snapping BEFORE the arrow's own scroll handler runs so the step lands on a card
+    wrap.addEventListener('click', function (e) { if (e.target.closest('[data-rail-prev],[data-rail-next]')) { rail.style.scrollSnapType = ''; pauseFor(7000); } }, true);
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; }, { threshold: 0.1 }).observe(rail);
+    raf = requestAnimationFrame(tick);
+  });
+
   /* ---------- preview forms (not connected) ---------- */
   var toast = $('[data-toast]'); var tt;
   function say(msg) { if (!toast) return; toast.textContent = msg; toast.classList.add('is-on'); clearTimeout(tt); tt = setTimeout(function () { toast.classList.remove('is-on'); }, 4200); }

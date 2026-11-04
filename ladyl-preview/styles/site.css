@@ -2932,6 +2932,16 @@ html.js .page-shop .shero__in { opacity: 0; animation: rise-in .95s var(--ease-o
 .page-events .evx-mini__m, .page-events .evx-mini__d { color: #fff; text-shadow: .045em .055em 0 var(--indigo), .085em .1em 0 var(--sun); }
 
 
+.page-shop .shop-ticker { z-index: 9; }
+
+.page-home .hero__media { border-radius: 0; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 50px - 1.92vw), 0 calc(100% - max(0px, 50px - 1.92vw))); }
+.page-shop .shero__bg { bottom: 0; border-radius: 0; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 42px - 1.92vw), 0 calc(100% - max(0px, 42px - 1.92vw))); }
+
+
+.card__media:has(> img[src*="scorpio-season_-cosmic-scorpion-poster"]) { background: linear-gradient(90deg, #5157b1, #5050ab); }
+.card__media > img[src*="scorpio-season_-cosmic-scorpion-poster"] { object-fit: contain; }
+
+
 .page-refer .pg-ticket__code { color: var(--violet); text-shadow: .05em .06em 0 var(--indigo); }
 
 
