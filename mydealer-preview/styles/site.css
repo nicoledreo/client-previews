@@ -864,7 +864,7 @@ body.gate-open { overflow: hidden; }
 }
 @media (max-width: 760px) {
   .tickets--4 { grid-template-columns: minmax(0, 1fr); }
-  .hero__facts .hero__fact:nth-child(2), .hero__facts .hero__fact:nth-child(3) { display: none; }
+  .hero .hero__facts .hero__fact:nth-child(2), .hero .hero__facts .hero__fact:nth-child(3) { display: none; }
   .hero__facts { gap: 8px; }
   .hero__film { margin-top: 0; }
   .home-store__bell { left: auto; right: -2%; bottom: auto; top: -34px; width: 96px; }
