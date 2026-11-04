@@ -2938,6 +2938,11 @@ html.js .page-shop .shero__in { opacity: 0; animation: rise-in .95s var(--ease-o
 .page-shop .shero__bg { bottom: 0; border-radius: 0; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 42px - 1.92vw), 0 calc(100% - max(0px, 42px - 1.92vw))); }
 
 
+.page-shop .shero__spill, .page-home .hero__spill, .page-420 .pg-spill { transform: translate3d(var(--px, 0px), min(var(--py, 0px), 0px), 0); }
+.page-shop .shero__spill { bottom: -12%; }
+@media (max-width: 999px) { .page-shop .shero__spill { bottom: -6%; } }
+
+
 .card__media:has(> img[src*="scorpio-season_-cosmic-scorpion-poster"]) { background: linear-gradient(90deg, #5157b1, #5050ab); }
 .card__media > img[src*="scorpio-season_-cosmic-scorpion-poster"] { object-fit: contain; }
 
@@ -2977,3 +2982,34 @@ html.js .page-shop .shero__in { opacity: 0; animation: rise-in .95s var(--ease-o
   .page-local .lc-pass--mini .lc-pass__pt strong { font-size: 1rem; }
   .page-local .lc-pass--mini .lc-pass__pt span:not(.lc-pass__lbl) { font-size: .76rem; }
 }
+
+
+@media (min-width: 600px) and (max-width: 999px) {
+  .page-home .hero__spill.m-36 { bottom: -3% !important; }
+  .page-home .hero__spill.m-40 { bottom: -5% !important; }
+}
+
+
+@media (min-width: 700px) { .page-local .postcards.lc-spots--n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+
+.grid + .grid { margin-top: clamp(16px, 2vw, 24px); }
+
+
+@media (min-width: 700px) { .page-event .evp-more__grid:has(> :nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .page-event .evp-more__grid:has(> :nth-child(4):last-child) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+
+@media (min-width: 900px) {
+  .page-pages .pg-related__rail:has(> :nth-child(5):last-child) { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .page-pages .pg-related__rail:has(> :nth-child(5):last-child) > * { grid-column: span 2; }
+  .page-pages .pg-related__rail:has(> :nth-child(5):last-child) > :nth-child(4) { grid-column: 2 / span 2; }
+}
+
+
+.page-events .evx-mini__date { top: 0; bottom: 0; align-content: center; }
+.page-events .evx-mini--0 { left: 0; top: 25%; rotate: -10deg; }
+.page-events .evx-mini--2 { right: -1%; top: 29%; rotate: 11deg; }
+
+.page-events .evx-badge { left: -3%; bottom: 3%; }
+@media (max-width: 699px) { .page-events .evx-badge { width: 88px; height: 88px; font-size: .56rem; left: -4%; bottom: 0; } .page-events .evx-badge span { padding: 0 12px; } }
