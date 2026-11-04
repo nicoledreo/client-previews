@@ -3013,3 +3013,25 @@ html.js .page-shop .shero__in { opacity: 0; animation: rise-in .95s var(--ease-o
 
 .page-events .evx-badge { left: -3%; bottom: 3%; }
 @media (max-width: 699px) { .page-events .evx-badge { width: 88px; height: 88px; font-size: .56rem; left: -4%; bottom: 0; } .page-events .evx-badge span { padding: 0 12px; } }
+
+
+:is(.page-events, .page-event) .ev-card__poster--fit > img { position: relative; z-index: 1; object-fit: contain; }
+:is(.page-events, .page-event) .ev-card__poster--fit .ev-fit__bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+:is(.page-events, .page-event) .ev-card__poster--fit .ev-fit__bg img { width: 100%; height: 100%; object-fit: cover; filter: blur(18px) saturate(1.15) brightness(.92); transform: scale(1.2); }
+
+.card__media.media-fit { position: relative; }
+.card__media.media-fit > img { position: relative; z-index: 1; object-fit: contain; }
+.card__media.media-fit .media-fit__bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.card__media.media-fit .media-fit__bg img, a.card:hover .card__media.media-fit .media-fit__bg img { width: 100%; height: 100%; object-fit: cover; filter: blur(18px) saturate(1.15) brightness(.92); transform: scale(1.2); }
+
+
+.page-event .evp-art--img .evp-frame img { aspect-ratio: auto; height: auto; }
+.page-event .evp-art--img .evp-art__obj--a { width: 24% !important; right: -13% !important; top: -15% !important; }
+.page-event .evp-art--img .evp-art__obj--b { width: 18% !important; left: -11% !important; top: auto !important; bottom: -6% !important; }
+.page-event .evp-art--img .evp-stub { right: -7%; bottom: -12%; }
+@media (max-width: 600px) {
+  
+  .page-event .evp-art--img .evp-art__obj--a { right: -6% !important; top: -14% !important; }
+  .page-event .evp-art--img .evp-art__obj--b { left: -6% !important; top: -12% !important; bottom: auto !important; }
+  .page-event .evp-art--img .evp-stub { left: -3%; right: auto; bottom: -16%; transform-origin: 0 100%; }
+}
