@@ -69,7 +69,7 @@
   if (drawer) drawer.addEventListener('click', function (e) { if (e.target.closest('a')) toggleDrawer(false); });
   window.addEventListener('resize', function () { if (window.innerWidth > 1180) toggleDrawer(false); });
 
-  /* ---------- open / closed (Minnesota time, noon to 8 every day) ---------- */
+  /* ---------- open / closed (Minnesota time, 10am to 8pm every day) ---------- */
   function mnNow() {
     try {
       var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date());
@@ -77,10 +77,10 @@
       return (parseInt(m.hour, 10) % 24) + parseInt(m.minute, 10) / 60;
     } catch (e) { var d = new Date(); return d.getHours() + d.getMinutes() / 60; }
   }
-  var h = mnNow(), OPEN = 12, CLOSE = 20;
+  var h = mnNow(), OPEN = 10, CLOSE = 20;
   $$('[data-open-status]').forEach(function (el) {
     if (h >= OPEN && h < CLOSE) { el.textContent = 'Open now · until 8 pm'; el.classList.remove('is-closed'); }
-    else { el.textContent = h < OPEN ? 'Closed · opens at noon today' : 'Closed · opens at noon tomorrow'; el.classList.add('is-closed'); }
+    else { el.textContent = h < OPEN ? 'Closed · opens at 10 am today' : 'Closed · opens at 10 am tomorrow'; el.classList.add('is-closed'); }
   });
 
   /* ---------- hero video ---------- */

@@ -47,7 +47,7 @@
                              click / wheel / key / touch / scroll skips it; skipped when sessionStorage
                              'mydealer-intro' === '1' (set when it plays) or under reduced motion. Black slats rotate
                              open, then the hero's [data-words] switches on (motion.js holds the hero until then).
-   data-neon-sign            The live OPEN / CLOSED neon sign (footer finale): Minnesota time, noon to 8 every day,
+   data-neon-sign            The live OPEN / CLOSED neon sign (footer finale): Minnesota time, 10am to 8pm every day,
                              re-checked every 30 s; it also keeps every [data-open-status] text live (same strings as
                              site.js).
    window.MD.refresh(el)     Call after inserting markup that carries these hooks (scans el, default document).
@@ -237,7 +237,7 @@
     watch(box, function () { fx.classList.add('is-open'); setTimeout(function () { if (fx.parentNode) fx.parentNode.removeChild(fx); }, 1600); });
   }
 
-  /* ---------- live OPEN / CLOSED (Minnesota time, noon to 8 every day; same logic and strings as site.js) ---------- */
+  /* ---------- live OPEN / CLOSED (Minnesota time, 10am to 8pm every day; same logic and strings as site.js) ---------- */
   function mnNow() {
     try {
       var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date());
@@ -246,8 +246,8 @@
     } catch (e) { var d = new Date(); return d.getHours() + d.getMinutes() / 60; }
   }
   function signs() {
-    var h = mnNow(), open = h >= 12 && h < 20;
-    var txt = open ? 'Open now · until 8 pm' : (h < 12 ? 'Closed · opens at noon today' : 'Closed · opens at noon tomorrow');
+    var h = mnNow(), open = h >= 10 && h < 20;
+    var txt = open ? 'Open now · until 8 pm' : (h < 10 ? 'Closed · opens at 10 am today' : 'Closed · opens at 10 am tomorrow');
     $$('[data-neon-sign]').forEach(function (s) { s.classList.toggle('is-open', open); s.classList.toggle('is-closed', !open); });
     $$('[data-open-status]').forEach(function (el) { if (el.textContent !== txt) el.textContent = txt; el.classList.toggle('is-closed', !open); });
   }
